@@ -1,3 +1,4 @@
+use flate2::read::GzDecoder;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs::File;
@@ -5,7 +6,7 @@ use std::io;
 use std::io::prelude::*;
 use std::io::Read;
 use std::io::SeekFrom;
-
+use std::path::Path;
 mod tests;
 
 #[derive(Debug, Clone, Default)]
@@ -14,6 +15,13 @@ struct Index {
     offset: u32,
     size: u32,
     dict_name: String,
+}
+pub fn format_oxford_gb(abc: String) -> String {
+    let abc = abc.replace("*", "\n  *");
+    let abc = abc.replace(" 1 ", "\n1. ");
+    let abc = abc.replace(" 2 ", "\n2. ");
+    let abc = abc.replace(" 3 ", "\n3. ");
+    return abc;
 }
 
 impl Index {
@@ -40,11 +48,18 @@ impl Dict {
         let mut content: Vec<u8> = vec![];
         let idx_path = format!("{}.idx", filepath);
         let dict_path = format!("{}.dict", filepath);
+        let dz_path = format!("{}.dict.dz", filepath);
+        if !Path::new(&dict_path).exists() {
+            println!(".dict not exist: {}", dict_path);
+            let mut dz_file = File::open(&dz_path).unwrap();
+            let mut gz = GzDecoder::new(dz_file);
+            let mut dict_file = File::create(&dict_path).unwrap();
+            io::copy(&mut gz, &mut dict_file);
+        }
         let mut f = File::open(&idx_path).unwrap();
         let _ = f.read_to_end(&mut content);
         let mut idx = 0;
         let mut it = content.iter();
-        //let mut dict = Dict::default();
         loop {
             let mut index = Index::default();
             index.dict_name = dict_path.clone();
@@ -60,7 +75,6 @@ impl Dict {
             index.offset = data_offset;
             index.size = data_size;
             self.dict.insert(index.name.clone(), index.clone());
-            //it.advance_by(8);
             for _ in 0..8 {
                 it.next();
             }
@@ -75,18 +89,16 @@ impl Dict {
             print!(">> ");
             let _ = io::stdout().flush();
             let _ = io::stdin().read_line(&mut cmd);
-            cmd = cmd.trim().to_string();
+            cmd = cmd.trim().to_lowercase().to_string();
             let res = self.find_word(&cmd);
-            println!("{}", res);
+            println!("{}", res.unwrap_or("".to_string()));
             println!("==========");
         }
     }
-    pub fn find_word(&self, input: &str) -> String {
-        dbg!(&input);
+    pub fn find_word(&self, input: &str) -> Option<String> {
         if let Some(index) = self.dict.get(input) {
-            return index.get_data();
+            return Some(index.get_data());
         }
-        println!("Not found");
-        return "".to_string();
+        None
     }
 }
