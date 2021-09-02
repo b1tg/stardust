@@ -10,7 +10,7 @@ use std::path::Path;
 mod tests;
 
 #[derive(Debug, Clone, Default)]
-struct Index {
+pub struct Index {
     name: String,
     offset: u32,
     size: u32,
@@ -51,10 +51,10 @@ impl Dict {
         let dz_path = format!("{}.dict.dz", filepath);
         if !Path::new(&dict_path).exists() {
             println!(".dict not exist: {}", dict_path);
-            let mut dz_file = File::open(&dz_path).unwrap();
+            let dz_file = File::open(&dz_path).unwrap();
             let mut gz = GzDecoder::new(dz_file);
             let mut dict_file = File::create(&dict_path).unwrap();
-            io::copy(&mut gz, &mut dict_file);
+            let _ = io::copy(&mut gz, &mut dict_file);
         }
         let mut f = File::open(&idx_path).unwrap();
         let _ = f.read_to_end(&mut content);
