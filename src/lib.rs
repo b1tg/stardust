@@ -24,6 +24,28 @@ pub fn format_oxford_gb(abc: String) -> String {
     return abc;
 }
 
+pub fn adjust_word_suffix(input: &str) -> Vec<String> {
+    // doubled => double
+    // e => ed
+    // quotes => quote receives => receive
+    // e => es
+    // companies => company
+    // y => ies
+    // redirection => redirect
+    // t => tion
+
+    let mut word_list = vec![];
+    let trans_table = &[("tion", "t"), ("ies", "y"), ("ed", "e"), ("es", "e")];
+    for (dst, src) in trans_table {
+        if input.ends_with(dst) {
+            let word = format!("{}{}", &input[..input.len() - dst.len()], src);
+            word_list.push(word);
+        }
+    }
+
+    return word_list;
+}
+
 impl Index {
     pub fn get_data(&self) -> String {
         let mut dict_file = File::open(&self.dict_name).unwrap();
