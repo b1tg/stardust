@@ -33,9 +33,17 @@ pub fn adjust_word_suffix(input: &str) -> Vec<String> {
     // y => ies
     // redirection => redirect
     // t => tion
+    // biased => bias
+    //   => ed
 
     let mut word_list = vec![];
-    let trans_table = &[("tion", "t"), ("ies", "y"), ("ed", "e"), ("es", "e")];
+    let trans_table = &[
+        ("tion", "t"),
+        ("ies", "y"),
+        ("ed", "e"),
+        ("ed", ""),
+        ("es", "e"),
+    ];
     for (dst, src) in trans_table {
         if input.ends_with(dst) {
             let word = format!("{}{}", &input[..input.len() - dst.len()], src);
