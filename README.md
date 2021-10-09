@@ -1,0 +1,3 @@
+# stardust
+
+stardict rust implement
